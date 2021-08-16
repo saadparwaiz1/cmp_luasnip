@@ -8,6 +8,14 @@ source.new = function()
   return setmetatable({}, { __index = source })
 end
 
+source.get_keyword_pattern = function()
+  return '\\%(\\w\\+\\|[^[:alnum:]]\\)'
+end
+
+function source:get_debug_name()
+  return 'luasnip'
+end
+
 function source:complete(request, callback)
   local filetypes = { request.context.filetype, 'all' }
   local items = {}
