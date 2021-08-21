@@ -42,12 +42,7 @@ end
 function source:resolve(completion_item, callback)
   local snip = luasnip.snippets[completion_item.data.filetype][completion_item.data.ft_indx]
   local header = (snip.name or "") .. " _ `[" .. completion_item.data.filetype .. ']`\n'
-  local ok, docstring = pcall(snip.get_docstring, snip)
-  if ok then
-    docstring = {'\n', '```' .. vim.bo.filetype, docstring, '```'}
-  else
-    docstring = ''
-  end
+  local docstring = {'\n', '```' .. vim.bo.filetype, snip:get_docstring(), '```'}
   local documentation = { header .. string.rep('=', string.len(header) - 3), "", (snip.dscr or ""), docstring}
   documentation = util.convert_input_to_markdown_lines(documentation)
   documentation = table.concat(documentation, '\n')
