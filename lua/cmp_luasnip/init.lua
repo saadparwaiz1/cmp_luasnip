@@ -9,7 +9,7 @@ source.new = function()
 end
 
 source.get_keyword_pattern = function()
-  return '\\%(\\w\\+\\|[^[:alnum:]]\\)'
+  return '\\%([^[:alnum:][:blank:]]\\|\\w\\+\\)'
 end
 
 function source:get_debug_name()
