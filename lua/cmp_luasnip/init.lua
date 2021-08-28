@@ -82,7 +82,13 @@ function source:resolve(completion_item, callback)
 end
 
 function source:execute(completion_item, callback)
-	local snip = require("luasnip").snippets[completion_item.data.filetype][completion_item.data.ft_indx]:copy()
+	local snip = require("luasnip").snippets[completion_item.data.filetype][completion_item.data.ft_indx]
+	if snip.regTrig then
+		-- if trigger is a pattern, expand "pattern" instead of actual snippet.
+		snip = snip:get_pattern_expand_helper()
+	else
+		snip = snip:copy()
+	end
 	snip:trigger_expand(Luasnip_current_nodes[vim.api.nvim_get_current_buf()])
 	callback(completion_item)
 end
