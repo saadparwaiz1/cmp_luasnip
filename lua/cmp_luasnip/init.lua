@@ -8,8 +8,8 @@ local doc_cache = {}
 
 local function get_documentation(snip, data)
 	local header = (snip.name or "") .. " _ `[" .. data.filetype .. "]`\n"
-	local docstring = { "\n", "```" .. vim.bo.filetype, snip:get_docstring(), "```" }
-	local documentation = { header .. string.rep("=", string.len(header) - 3), "", (snip.dscr or ""), docstring }
+	local docstring = {"", "```" .. vim.bo.filetype, snip:get_docstring(), "```" }
+	local documentation = { header .. '---', (snip.dscr or ""), docstring }
 	documentation = util.convert_input_to_markdown_lines(documentation)
 	documentation = table.concat(documentation, "\n")
 	doc_cache[data.filetype] = doc_cache[data.filetype] or {}
