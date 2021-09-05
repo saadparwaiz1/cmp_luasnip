@@ -47,9 +47,13 @@ function source:complete(params, callback)
 		local ft_table = require("luasnip").snippets[filetypes[i]]
 		if ft_table then
 			for j, snip in ipairs(ft_table) do
+        local word = snip.trigger
+        if snip.regTrig then
+          word = require('cmp_luasnip.regex')(params.context.cursor_line, snip.trigger)
+        end
 				items[#items + 1] = {
-					word = snip.trigger,
-					label = snip.trigger,
+					word = word,
+					label = word,
 					kind = cmp.lsp.CompletionItemKind.Snippet,
 					data = {
 						filetype = filetypes[i],

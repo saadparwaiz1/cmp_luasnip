@@ -67,7 +67,10 @@ end
 ---@param trigger string
 local function match_partially(prefix, trigger)
 	local _, e = trigger:find(prefix)
-	return trigger:sub(e + 1)
+  if e then
+	  return trigger:sub(e + 1)
+  end
+  return trigger
 end
 
 -- construct label for regex trigger
