@@ -8,8 +8,8 @@ local doc_cache = {}
 
 local function get_documentation(snip, data)
 	local header = (snip.name or "") .. " _ `[" .. data.filetype .. "]`\n"
-	local docstring = {"", "```" .. vim.bo.filetype, snip:get_docstring(), "```" }
-	local documentation = { header .. '---', (snip.dscr or ""), docstring }
+	local docstring = { "", "```" .. vim.bo.filetype, snip:get_docstring(), "```" }
+	local documentation = { header .. "---", (snip.dscr or ""), docstring }
 	documentation = util.convert_input_to_markdown_lines(documentation)
 	documentation = table.concat(documentation, "\n")
 	doc_cache[data.filetype] = doc_cache[data.filetype] or {}
@@ -40,7 +40,7 @@ function source:complete(params, callback)
 		return
 	end
 
-	local filetypes = { params.context.filetype, "all" }
+	local filetypes = require("luasnip.util.util").get_snippet_filetypes(params.context.filetype)
 	local items = {}
 
 	for i = 1, #filetypes do
