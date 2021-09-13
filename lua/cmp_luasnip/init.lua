@@ -6,6 +6,11 @@ local source = {}
 local snip_cache = {}
 local doc_cache = {}
 
+source.clear_cache = function()
+	snip_cache = {}
+	doc_cache = {}
+end
+
 local function get_documentation(snip, data)
 	local header = (snip.name or "") .. " _ `[" .. data.filetype .. "]`\n"
 	local docstring = { "", "```" .. vim.bo.filetype, snip:get_docstring(), "```" }
