@@ -51,7 +51,7 @@ function source:complete(params, callback)
 	for i = 1, #filetypes do
 		local ft_table = require("luasnip").snippets[filetypes[i]]
 		if ft_table then
-			for j, snip in ipairs(ft_table) do
+			for j, snip in pairs(ft_table) do
 				items[#items + 1] = {
 					word = snip.trigger,
 					label = snip.trigger,
