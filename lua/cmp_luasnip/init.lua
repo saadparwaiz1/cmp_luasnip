@@ -94,7 +94,7 @@ function source:execute(completion_item, callback)
 	else
 		snip = snip:copy()
 	end
-	snip:trigger_expand(Luasnip_current_nodes[vim.api.nvim_get_current_buf()])
+	snip:trigger_expand(require("luasnip").session.current_nodes[vim.api.nvim_get_current_buf()])
 	callback(completion_item)
 end
 
