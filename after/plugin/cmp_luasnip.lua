@@ -4,7 +4,7 @@ vim.api.nvim_exec(
 	[[
   augroup cmp_luasnip
     au!
-    autocmd User LuasnipCleanup lua require'cmp_luasnip'.clear_cache()
+    autocmd User LuasnipCleanup,LuasnipSnippetsAdded lua require'cmp_luasnip'.clear_cache()
   augroup END
 ]],
 	false
