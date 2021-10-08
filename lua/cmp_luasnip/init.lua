@@ -11,6 +11,13 @@ source.clear_cache = function()
 	doc_cache = {}
 end
 
+
+source.refresh = function ()
+  local  ft = require('luasnip.session').latest_load_ft
+  snip_cache[ft] = nil
+  doc_cache[ft] = nil
+end
+
 local function get_documentation(snip, data)
 	local header = (snip.name or "") .. " _ `[" .. data.filetype .. "]`\n"
 	local docstring = { "", "```" .. vim.bo.filetype, snip:get_docstring(), "```" }
