@@ -59,15 +59,17 @@ function source:complete(params, callback)
 		local ft_table = require("luasnip").snippets[filetypes[i]]
 		if ft_table then
 			for j, snip in pairs(ft_table) do
-				items[#items + 1] = {
-					word = snip.trigger,
-					label = snip.trigger,
-					kind = cmp.lsp.CompletionItemKind.Snippet,
-					data = {
-						filetype = filetypes[i],
-						ft_indx = j,
-					},
-				}
+				if not snip.hidden then
+					items[#items + 1] = {
+						word = snip.trigger,
+						label = snip.trigger,
+						kind = cmp.lsp.CompletionItemKind.Snippet,
+						data = {
+							filetype = filetypes[i],
+							ft_indx = j,
+						},
+					}
+				end
 			end
 		end
 	end
