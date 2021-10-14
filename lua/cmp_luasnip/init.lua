@@ -47,33 +47,35 @@ function source:get_debug_name()
 end
 
 function source:complete(params, callback)
-	if snip_cache[params.context.filetype] ~= nil then
-		callback(snip_cache[params.context.filetype])
-		return
-	end
-
 	local filetypes = require("luasnip.util.util").get_snippet_filetypes(params.context.filetype)
 	local items = {}
 
 	for i = 1, #filetypes do
-		local ft_table = require("luasnip").snippets[filetypes[i]]
-		if ft_table then
-			for j, snip in pairs(ft_table) do
-				if not snip.hidden then
-					items[#items + 1] = {
-						word = snip.trigger,
-						label = snip.trigger,
-						kind = cmp.lsp.CompletionItemKind.Snippet,
-						data = {
-							filetype = filetypes[i],
-							ft_indx = j,
-						},
-					}
+		local ft = filetypes[i]
+		if snip_cache[ft] then
+			-- cache-hit, directly append to cache[ft].
+			vim.list_extend(items, snip_cache[ft])
+		else
+			-- ft not yet in cache.
+			local ft_table = require("luasnip").snippets[ft]
+			if ft_table then
+				for j, snip in pairs(ft_table) do
+					if not snip.hidden then
+						items[#items + 1] = {
+							word = snip.trigger,
+							label = snip.trigger,
+							kind = cmp.lsp.CompletionItemKind.Snippet,
+							data = {
+								filetype = ft,
+								ft_indx = j,
+							},
+						}
+					end
 				end
 			end
+			snip_cache[ft] = items
 		end
 	end
-	snip_cache[params.context.filetype] = items
 	callback(items)
 end
 
