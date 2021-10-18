@@ -11,11 +11,10 @@ source.clear_cache = function()
 	doc_cache = {}
 end
 
-
-source.refresh = function ()
-  local  ft = require('luasnip.session').latest_load_ft
-  snip_cache[ft] = nil
-  doc_cache[ft] = nil
+source.refresh = function()
+	local ft = require("luasnip.session").latest_load_ft
+	snip_cache[ft] = nil
+	doc_cache[ft] = nil
 end
 
 local function get_documentation(snip, data)
@@ -52,16 +51,14 @@ function source:complete(params, callback)
 
 	for i = 1, #filetypes do
 		local ft = filetypes[i]
-		if snip_cache[ft] then
-			-- cache-hit, directly append to cache[ft].
-			vim.list_extend(items, snip_cache[ft])
-		else
+		if not snip_cache[ft] then
 			-- ft not yet in cache.
+			local ft_items = {}
 			local ft_table = require("luasnip").snippets[ft]
 			if ft_table then
 				for j, snip in pairs(ft_table) do
 					if not snip.hidden then
-						items[#items + 1] = {
+						ft_items[#ft_items + 1] = {
 							word = snip.trigger,
 							label = snip.trigger,
 							kind = cmp.lsp.CompletionItemKind.Snippet,
@@ -73,8 +70,9 @@ function source:complete(params, callback)
 					end
 				end
 			end
-			snip_cache[ft] = items
+			snip_cache[ft] = ft_items
 		end
+		vim.list_extend(items, snip_cache[ft])
 	end
 	callback(items)
 end
