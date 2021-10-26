@@ -24,3 +24,13 @@ use {
 }
 use { 'saadparwaiz1/cmp_luasnip' }
 ```
+
+To enable filtering completion candidates by snippet's `show_condition` 
+use the following options in `sources`:
+
+```lua
+sources = {
+  { name = 'luasnip', opts = { use_show_condition = true } },
+  -- more sources
+},
+```

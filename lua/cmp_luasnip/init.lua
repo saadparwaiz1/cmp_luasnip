@@ -3,6 +3,17 @@ local util = require("vim.lsp.util")
 
 local source = {}
 
+local defaults = {
+	use_show_condition = false,
+}
+
+local function init_options(params)
+	params.option = vim.tbl_deep_extend('keep', params.option, defaults)
+	vim.validate({
+		use_show_condition = { params.option.use_show_condition, 'boolean' },
+	})
+end
+
 local snip_cache = {}
 local doc_cache = {}
 
@@ -45,9 +56,19 @@ function source:get_debug_name()
 	return "luasnip"
 end
 
+local function get_snippet_item_filter()
+	local line_to_cursor = require('luasnip.util.util').get_current_line_to_cursor()
+	return function(item)
+		return not item.data.show_condition or item.data.show_condition(line_to_cursor)
+	end
+end
+
 function source:complete(params, callback)
+	init_options(params)
+
 	local filetypes = require("luasnip.util.util").get_snippet_filetypes(params.context.filetype)
 	local items = {}
+	local snip_filter
 
 	for i = 1, #filetypes do
 		local ft = filetypes[i]
@@ -65,6 +86,7 @@ function source:complete(params, callback)
 							data = {
 								filetype = ft,
 								ft_indx = j,
+								show_condition = snip.show_condition,
 							},
 						}
 					end
@@ -72,7 +94,13 @@ function source:complete(params, callback)
 			end
 			snip_cache[ft] = ft_items
 		end
-		vim.list_extend(items, snip_cache[ft])
+		local snips = snip_cache[ft]
+		if params.option.use_show_condition then
+			-- to minimize overhead of get_current_line_to_cursor() when use_show_condition=false
+			snip_filter = snip_filter or get_snippet_item_filter()
+			snips = vim.tbl_filter(snip_filter, snips)
+		end
+		vim.list_extend(items, snips)
 	end
 	callback(items)
 end
