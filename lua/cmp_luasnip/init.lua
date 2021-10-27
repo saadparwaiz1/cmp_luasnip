@@ -4,7 +4,7 @@ local util = require("vim.lsp.util")
 local source = {}
 
 local defaults = {
-	use_show_condition = false,
+	use_show_condition = true,
 }
 
 -- the options are being passed via cmp.setup.sources, e.g.
