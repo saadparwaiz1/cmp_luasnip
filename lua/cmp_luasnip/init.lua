@@ -7,6 +7,8 @@ local defaults = {
 	use_show_condition = false,
 }
 
+-- the options are being passed via cmp.setup.sources, e.g.
+-- require('cmp').setup { sources = { { name = 'luasnip', opts = {...} } } }
 local function init_options(params)
 	params.option = vim.tbl_deep_extend('keep', params.option, defaults)
 	vim.validate({
@@ -56,19 +58,11 @@ function source:get_debug_name()
 	return "luasnip"
 end
 
-local function get_snippet_item_filter()
-	local line_to_cursor = require('luasnip.util.util').get_current_line_to_cursor()
-	return function(item)
-		return not item.data.show_condition or item.data.show_condition(line_to_cursor)
-	end
-end
-
 function source:complete(params, callback)
 	init_options(params)
 
 	local filetypes = require("luasnip.util.util").get_snippet_filetypes(params.context.filetype)
 	local items = {}
-	local snip_filter
 
 	for i = 1, #filetypes do
 		local ft = filetypes[i]
@@ -94,14 +88,17 @@ function source:complete(params, callback)
 			end
 			snip_cache[ft] = ft_items
 		end
-		local snips = snip_cache[ft]
-		if params.option.use_show_condition then
-			-- to minimize overhead of get_current_line_to_cursor() when use_show_condition=false
-			snip_filter = snip_filter or get_snippet_item_filter()
-			snips = vim.tbl_filter(snip_filter, snips)
-		end
-		vim.list_extend(items, snips)
+		vim.list_extend(items, snip_cache[ft])
 	end
+
+	if params.option.use_show_condition then
+		local line_to_cursor = require('luasnip.util.util').get_current_line_to_cursor()
+		items = vim.tbl_filter(function(i)
+			-- check if show_condition exists in case (somehow) user updated cmp_luasnip but not luasnip
+			return not i.data.show_condition or i.data.show_condition(line_to_cursor)
+		end, items)
+	end
+
 	callback(items)
 end
 

@@ -34,3 +34,7 @@ sources = {
   -- more sources
 },
 ```
+
+This can also be configured on per-buffer basis as described in cmp's README
+[here](https://github.com/hrsh7th/nvim-cmp#how-to-disable-nvim-cmp-on-the-specific-buffer)
+and [here](https://github.com/hrsh7th/nvim-cmp#sources-type-tablecmpsourceconfig).
