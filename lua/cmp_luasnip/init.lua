@@ -3,6 +3,19 @@ local util = require("vim.lsp.util")
 
 local source = {}
 
+local defaults = {
+	use_show_condition = true,
+}
+
+-- the options are being passed via cmp.setup.sources, e.g.
+-- require('cmp').setup { sources = { { name = 'luasnip', opts = {...} } } }
+local function init_options(params)
+	params.option = vim.tbl_deep_extend('keep', params.option, defaults)
+	vim.validate({
+		use_show_condition = { params.option.use_show_condition, 'boolean' },
+	})
+end
+
 local snip_cache = {}
 local doc_cache = {}
 
@@ -46,6 +59,8 @@ function source:get_debug_name()
 end
 
 function source:complete(params, callback)
+	init_options(params)
+
 	local filetypes = require("luasnip.util.util").get_snippet_filetypes(params.context.filetype)
 	local items = {}
 
@@ -65,6 +80,7 @@ function source:complete(params, callback)
 							data = {
 								filetype = ft,
 								ft_indx = j,
+								show_condition = snip.show_condition,
 							},
 						}
 					end
@@ -74,6 +90,15 @@ function source:complete(params, callback)
 		end
 		vim.list_extend(items, snip_cache[ft])
 	end
+
+	if params.option.use_show_condition then
+		local line_to_cursor = require('luasnip.util.util').get_current_line_to_cursor()
+		items = vim.tbl_filter(function(i)
+			-- check if show_condition exists in case (somehow) user updated cmp_luasnip but not luasnip
+			return not i.data.show_condition or i.data.show_condition(line_to_cursor)
+		end, items)
+	end
+
 	callback(items)
 end
 

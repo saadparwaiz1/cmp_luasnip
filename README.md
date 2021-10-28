@@ -24,3 +24,17 @@ use {
 }
 use { 'saadparwaiz1/cmp_luasnip' }
 ```
+
+To disable filtering completion candidates by snippet's `show_condition`
+use the following options in `sources`:
+
+```lua
+sources = {
+  { name = 'luasnip', opts = { use_show_condition = false } },
+  -- more sources
+},
+```
+
+This can also be configured on per-buffer basis as described in cmp's README
+[here](https://github.com/hrsh7th/nvim-cmp#how-to-disable-nvim-cmp-on-the-specific-buffer)
+and [here](https://github.com/hrsh7th/nvim-cmp#sources-type-tablecmpsourceconfig).
