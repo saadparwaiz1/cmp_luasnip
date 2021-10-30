@@ -37,7 +37,13 @@ local function get_documentation(snip, data)
 	documentation = util.convert_input_to_markdown_lines(documentation)
 	documentation = table.concat(documentation, "\n")
 	doc_cache[data.filetype] = doc_cache[data.filetype] or {}
-	doc_cache[data.filetype][data.ft_indx] = documentation
+  doc_cache[data.filetype].auto = doc_cache[data.filetype].auto or {}
+  doc_cache[data.filetype].snip = doc_cache[data.filetype].snip or {}
+  if data.auto then
+	  doc_cache[data.filetype]['auto'][data.ft_indx] = documentation
+  else
+	  doc_cache[data.filetype]['snip'][data.ft_indx] = documentation
+  end
 	return documentation
 end
 
@@ -81,11 +87,30 @@ function source:complete(params, callback)
 								filetype = ft,
 								ft_indx = j,
 								show_condition = snip.show_condition,
+                auto = false
 							},
 						}
 					end
 				end
 			end
+      local auto_table = require('luasnip').autosnippets[ft]
+      if auto_table then
+        for j, snip in pairs(auto_table) do
+          if not snip.hidden then
+            ft_items[#ft_items+1] = {
+              word = snip.trigger,
+              label = snip.trigger,
+              kind = cmp.lsp.CompletionItemKind.Snippet,
+              data = {
+                filetype = ft,
+                ft_indx = j,
+                show_condition = snip.show_condition,
+                auto = true
+              }
+            }
+          end
+        end
+      end
 			snip_cache[ft] = ft_items
 		end
 		vim.list_extend(items, snip_cache[ft])
@@ -103,25 +128,24 @@ function source:complete(params, callback)
 end
 
 function source:resolve(completion_item, callback)
-	local snip = require("luasnip").snippets[completion_item.data.filetype][completion_item.data.ft_indx]
-	local documentation
-	if
-		doc_cache[completion_item.data.filetype]
-		and doc_cache[completion_item.data.filetype][completion_item.data.ft_indx]
-	then
-		documentation = doc_cache[completion_item.data.filetype][completion_item.data.ft_indx]
-	else
-		documentation = get_documentation(snip, completion_item.data)
-	end
+  local ls = require('luasnip')
+  local snip_table = completion_item.data.auto and ls.autosnippets or ls.snippets
+	local snip = snip_table[completion_item.data.filetype][completion_item.data.ft_indx]
+  local doc_itm = doc_cache[completion_item.data.filetype] or {}
+  doc_itm = completion_item.data.auto and doc_itm.auto or doc_itm.snip
+  doc_itm = doc_itm or {}
+  doc_itm = doc_itm[completion_item.data.ft_indx] or get_documentation(snip, completion_item.data)
 	completion_item.documentation = {
 		kind = cmp.lsp.MarkupKind.Markdown,
-		value = documentation,
+		value = doc_itm,
 	}
 	callback(completion_item)
 end
 
 function source:execute(completion_item, callback)
-	local snip = require("luasnip").snippets[completion_item.data.filetype][completion_item.data.ft_indx]
+  local ls = require('luasnip')
+  local snip_table = completion_item.data.auto and ls.autosnippets or ls.snippets
+	local snip = snip_table[completion_item.data.filetype][completion_item.data.ft_indx]
 	if snip.regTrig then
 		-- if trigger is a pattern, expand "pattern" instead of actual snippet.
 		snip = snip:get_pattern_expand_helper()
