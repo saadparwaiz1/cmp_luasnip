@@ -1,6 +1,42 @@
 local cmp = require("cmp")
 local util = require("vim.lsp.util")
 
+-- Check if treesitter is available
+local ok_parsers, ts_parsers = pcall(require, "nvim-treesitter.parsers")
+if not ok_parsers then
+	ts_parsers = nil
+end
+
+local ok_utils, ts_utils = pcall(require, "nvim-treesitter.ts_utils")
+if not ok_utils then
+	ts_utils = nil
+end
+
+local get_ts_cursor_lang = function()
+	local parser = ts_parsers.get_parser()
+	local current_node = ts_utils.get_node_at_cursor()
+
+	if current_node then
+		return parser:language_for_range({ current_node:range() }):lang()
+	else
+		return nil
+	end
+end
+
+local add_ts_parser_types = function(filetypes)
+	local language_at_cursor = get_ts_cursor_lang()
+
+	if not language_at_cursor then
+		return filetypes
+	end
+
+	if not vim.tbl_contains(filetypes, language_at_cursor) then
+		table.insert(filetypes, language_at_cursor)
+	end
+
+	return filetypes
+end
+
 local source = {}
 
 local defaults = {
@@ -62,6 +98,8 @@ function source:complete(params, callback)
 	init_options(params)
 
 	local filetypes = require("luasnip.util.util").get_snippet_filetypes(params.context.filetype)
+	filetypes = add_ts_parser_types(filetypes)
+
 	local items = {}
 
 	for i = 1, #filetypes do
