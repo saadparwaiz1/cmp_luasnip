@@ -122,13 +122,29 @@ end
 
 function source:execute(completion_item, callback)
 	local snip = require("luasnip").snippets[completion_item.data.filetype][completion_item.data.ft_indx]
+
+	-- if trigger is a pattern, expand "pattern" instead of actual snippet.
 	if snip.regTrig then
-		-- if trigger is a pattern, expand "pattern" instead of actual snippet.
 		snip = snip:get_pattern_expand_helper()
-	else
-		snip = snip:copy()
 	end
-	snip:trigger_expand(require("luasnip").session.current_nodes[vim.api.nvim_get_current_buf()])
+
+	local cursor = vim.api.nvim_win_get_cursor(0)
+	-- get_cursor returns (1,0)-indexed position, clear_region expects (0,0)-indexed.
+	cursor[1] = cursor[1] - 1
+
+	-- text cannot be cleared before, as TM_CURRENT_LINE and
+	-- TM_CURRENT_WORD couldn't be set correctly.
+	require("luasnip").snip_expand(snip, {
+		-- clear word inserted into buffer by cmp.
+		-- cursor is currently behind word.
+		clear_region = {
+			from = {
+				cursor[1],
+				cursor[2]-#completion_item.word
+			},
+			to = cursor
+		}
+	})
 	callback(completion_item)
 end
 
