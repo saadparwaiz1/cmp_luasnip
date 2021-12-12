@@ -61,7 +61,7 @@ end
 function source:complete(params, callback)
 	init_options(params)
 
-	local filetypes = require("luasnip.util.util").get_snippet_filetypes(params.context.filetype)
+	local filetypes = require("luasnip.util.util").get_snippet_filetypes()
 	local items = {}
 
 	for i = 1, #filetypes do
