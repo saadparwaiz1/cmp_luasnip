@@ -71,7 +71,9 @@ function source:complete(params, callback)
 		if not snip_cache[ft] then
 			-- ft not yet in cache.
 			local ft_items = {}
-			local ft_table = require("luasnip").snippets[ft]
+			local ft_table = require("luasnip").get_snippets(ft, {
+				type = "snippets"
+			})
 			if ft_table then
 				for j, snip in pairs(ft_table) do
 					if not snip.hidden then
