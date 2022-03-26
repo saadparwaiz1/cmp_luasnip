@@ -36,8 +36,10 @@ local function get_documentation(snip, data)
 	local documentation = { header .. "---", (snip.dscr or ""), docstring }
 	documentation = util.convert_input_to_markdown_lines(documentation)
 	documentation = table.concat(documentation, "\n")
+
 	doc_cache[data.filetype] = doc_cache[data.filetype] or {}
-	doc_cache[data.filetype][data.ft_indx] = documentation
+	doc_cache[data.filetype][data.snip_id] = documentation
+
 	return documentation
 end
 
@@ -69,7 +71,9 @@ function source:complete(params, callback)
 		if not snip_cache[ft] then
 			-- ft not yet in cache.
 			local ft_items = {}
-			local ft_table = require("luasnip").snippets[ft]
+			local ft_table = require("luasnip").get_snippets(ft, {
+				type = "snippets"
+			})
 			if ft_table then
 				for j, snip in pairs(ft_table) do
 					if not snip.hidden then
@@ -79,7 +83,7 @@ function source:complete(params, callback)
 							kind = cmp.lsp.CompletionItemKind.Snippet,
 							data = {
 								filetype = ft,
-								ft_indx = j,
+								snip_id = snip.id,
 								show_condition = snip.show_condition,
 							},
 						}
@@ -103,13 +107,14 @@ function source:complete(params, callback)
 end
 
 function source:resolve(completion_item, callback)
-	local snip = require("luasnip").snippets[completion_item.data.filetype][completion_item.data.ft_indx]
+	local item_snip_id = completion_item.data.snip_id
+	local snip = require("luasnip").get_id_snippet(item_snip_id)
 	local documentation
 	if
 		doc_cache[completion_item.data.filetype]
-		and doc_cache[completion_item.data.filetype][completion_item.data.ft_indx]
+		and doc_cache[completion_item.data.filetype][item_snip_id]
 	then
-		documentation = doc_cache[completion_item.data.filetype][completion_item.data.ft_indx]
+		documentation = doc_cache[completion_item.data.filetype][item_snip_id]
 	else
 		documentation = get_documentation(snip, completion_item.data)
 	end
@@ -121,7 +126,7 @@ function source:resolve(completion_item, callback)
 end
 
 function source:execute(completion_item, callback)
-	local snip = require("luasnip").snippets[completion_item.data.filetype][completion_item.data.ft_indx]
+	local snip = require("luasnip").get_id_snippet(completion_item.data.snip_id)
 
 	-- if trigger is a pattern, expand "pattern" instead of actual snippet.
 	if snip.regTrig then
