@@ -4,8 +4,8 @@
 
 ```lua
 -- Installation
-use { 'L3MON4D3/LuaSnip' } 
-use { 
+use { 'L3MON4D3/LuaSnip' }
+use {
   'hrsh7th/nvim-cmp',
   config = function ()
     require'cmp'.setup {
@@ -14,7 +14,7 @@ use {
         require'luasnip'.lsp_expand(args.body)
       end
     },
-  
+
     sources = {
       { name = 'luasnip' },
       -- more sources
@@ -30,7 +30,7 @@ use the following options in `sources`:
 
 ```lua
 sources = {
-  { name = 'luasnip', options = { use_show_condition = false } },
+  { name = 'luasnip', option = { use_show_condition = false } },
   -- more sources
 },
 ```
