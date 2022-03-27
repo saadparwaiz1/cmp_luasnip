@@ -96,7 +96,7 @@ function source:complete(params, callback)
 	end
 
 	if params.option.use_show_condition then
-		local line_to_cursor = require('luasnip.util.util').get_current_line_to_cursor()
+		local line_to_cursor = params.context.cursor_before_line
 		items = vim.tbl_filter(function(i)
 			-- check if show_condition exists in case (somehow) user updated cmp_luasnip but not luasnip
 			return not i.data.show_condition or i.data.show_condition(line_to_cursor)
