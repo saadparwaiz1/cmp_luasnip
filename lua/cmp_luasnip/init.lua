@@ -31,6 +31,9 @@ source.refresh = function()
 end
 
 local function get_documentation(snip, data)
+	if snip == nil then
+		return ""
+	end
 	local header = (snip.name or "") .. " _ `[" .. data.filetype .. "]`\n"
 	local docstring = { "", "```" .. vim.bo.filetype, snip:get_docstring(), "```" }
 	local documentation = { header .. "---", (snip.dscr or ""), docstring }
