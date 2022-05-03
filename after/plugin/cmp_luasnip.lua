@@ -1,4 +1,5 @@
 require("cmp").register_source("luasnip", require("cmp_luasnip").new())
+require("cmp").register_source("luasnip_choice", require("cmp_luasnip.choice").new())
 
 local cmp_luasnip = vim.api.nvim_create_augroup("cmp_luasnip", {})
 
