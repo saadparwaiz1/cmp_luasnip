@@ -31,6 +31,9 @@ use the following options in `sources`:
 ```lua
 sources = {
   { name = 'luasnip', option = { use_show_condition = false } },
+  -- enables choice node integration within `Cmp`
+  -- requires latest version of `luasnip`
+  { name = 'luasnip_choice'}
   -- more sources
 },
 ```
