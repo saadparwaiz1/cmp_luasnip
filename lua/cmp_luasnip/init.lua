@@ -72,6 +72,7 @@ function source:complete(params, callback)
 		-- Right now, we need to update the regTrig snips on every keypress
 		-- potentially, but we should avoid that if we can
 		local ft = filetypes[i]
+		-- if not snip_cache[ft] then
 		-- ft not yet in cache.
 		local ft_items = {}
 		local ft_table = require("luasnip").get_snippets(ft, { type = "snippets" })
@@ -90,7 +91,7 @@ function source:complete(params, callback)
 						isIncomplete = false,
 					}
 					if snip.regTrig then
-						local expand_params = snip:matches(line)
+						local expand_params = snip:matches(params.context.cursor_before_line)
 						if expand_params then
 							stored_snip.word = expand_params.trigger
 							stored_snip.label = expand_params.trigger
@@ -103,6 +104,7 @@ function source:complete(params, callback)
 			end
 			snip_cache[ft] = ft_items
 		end
+		-- end
 		vim.list_extend(items, snip_cache[ft])
 	end
 
@@ -136,8 +138,6 @@ end
 function source:execute(completion_item, callback)
 	local snip = require("luasnip").get_id_snippet(completion_item.data.snip_id)
 
-	local line = require("luasnip.util.util").get_current_line_to_cursor()
-
 	local cursor = vim.api.nvim_win_get_cursor(0)
 	-- get_cursor returns (1,0)-indexed position, clear_region expects (0,0)-indexed.
 	cursor[1] = cursor[1] - 1
@@ -156,6 +156,7 @@ function source:execute(completion_item, callback)
 		},
 	}
 	if snip.regTrig then
+		local line = require("luasnip.util.util").get_current_line_to_cursor()
 		args.expand_params = snip:matches(line)
 	end
 
