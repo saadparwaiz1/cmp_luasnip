@@ -10,9 +10,9 @@ local defaults = {
 -- the options are being passed via cmp.setup.sources, e.g.
 -- require('cmp').setup { sources = { { name = 'luasnip', opts = {...} } } }
 local function init_options(params)
-	params.option = vim.tbl_deep_extend('keep', params.option, defaults)
+	params.option = vim.tbl_deep_extend("keep", params.option, defaults)
 	vim.validate({
-		use_show_condition = { params.option.use_show_condition, 'boolean' },
+		use_show_condition = { params.option.use_show_condition, "boolean" },
 	})
 end
 
@@ -48,7 +48,8 @@ source.new = function()
 end
 
 source.get_keyword_pattern = function()
-	return "\\%([^[:alnum:][:blank:]]\\|\\w\\+\\)"
+	-- This should probably be more descerning, but I'm not sure what it should be
+	return [[.]]
 end
 
 function source:is_available()
@@ -61,33 +62,43 @@ function source:get_debug_name()
 end
 
 function source:complete(params, callback)
+	local line = require("luasnip.util.util").get_current_line_to_cursor()
 	init_options(params)
 
 	local filetypes = require("luasnip.util.util").get_snippet_filetypes()
 	local items = {}
 
 	for i = 1, #filetypes do
+		-- Right now, we need to update the regTrig snips on every keypress
+		-- potentially, but we should avoid that if we can
 		local ft = filetypes[i]
-		if not snip_cache[ft] then
-			-- ft not yet in cache.
-			local ft_items = {}
-			local ft_table = require("luasnip").get_snippets(ft, {
-				type = "snippets"
-			})
-			if ft_table then
-				for j, snip in pairs(ft_table) do
-					if not snip.hidden then
-						ft_items[#ft_items + 1] = {
-							word = snip.trigger,
-							label = snip.trigger,
-							kind = cmp.lsp.CompletionItemKind.Snippet,
-							data = {
-								filetype = ft,
-								snip_id = snip.id,
-								show_condition = snip.show_condition,
-							},
-						}
+		-- ft not yet in cache.
+		local ft_items = {}
+		local ft_table = require("luasnip").get_snippets(ft, { type = "snippets" })
+		if ft_table then
+			for j, snip in pairs(ft_table) do
+				if not snip.hidden then
+					local stored_snip = {
+						word = snip.trigger,
+						label = snip.trigger,
+						kind = cmp.lsp.CompletionItemKind.Snippet,
+						data = {
+							filetype = ft,
+							snip_id = snip.id,
+							show_condition = snip.show_condition,
+						},
+						isIncomplete = false,
+					}
+					if snip.regTrig then
+						local expand_params = snip:matches(line)
+						if expand_params then
+							stored_snip.word = expand_params.trigger
+							stored_snip.label = expand_params.trigger
+						else
+							stored_snip.isIncomplete = true
+						end
 					end
+					table.insert(ft_items, stored_snip)
 				end
 			end
 			snip_cache[ft] = ft_items
@@ -110,10 +121,7 @@ function source:resolve(completion_item, callback)
 	local item_snip_id = completion_item.data.snip_id
 	local snip = require("luasnip").get_id_snippet(item_snip_id)
 	local documentation
-	if
-		doc_cache[completion_item.data.filetype]
-		and doc_cache[completion_item.data.filetype][item_snip_id]
-	then
+	if doc_cache[completion_item.data.filetype] and doc_cache[completion_item.data.filetype][item_snip_id] then
 		documentation = doc_cache[completion_item.data.filetype][item_snip_id]
 	else
 		documentation = get_documentation(snip, completion_item.data)
@@ -128,10 +136,7 @@ end
 function source:execute(completion_item, callback)
 	local snip = require("luasnip").get_id_snippet(completion_item.data.snip_id)
 
-	-- if trigger is a pattern, expand "pattern" instead of actual snippet.
-	if snip.regTrig then
-		snip = snip:get_pattern_expand_helper()
-	end
+	local line = require("luasnip.util.util").get_current_line_to_cursor()
 
 	local cursor = vim.api.nvim_win_get_cursor(0)
 	-- get_cursor returns (1,0)-indexed position, clear_region expects (0,0)-indexed.
@@ -139,17 +144,22 @@ function source:execute(completion_item, callback)
 
 	-- text cannot be cleared before, as TM_CURRENT_LINE and
 	-- TM_CURRENT_WORD couldn't be set correctly.
-	require("luasnip").snip_expand(snip, {
+	local args = {
 		-- clear word inserted into buffer by cmp.
 		-- cursor is currently behind word.
 		clear_region = {
 			from = {
 				cursor[1],
-				cursor[2]-#completion_item.word
+				cursor[2] - #completion_item.word,
 			},
-			to = cursor
-		}
-	})
+			to = cursor,
+		},
+	}
+	if snip.regTrig then
+		args.expand_params = snip:matches(line)
+	end
+
+	require("luasnip").snip_expand(snip, args)
 	callback(completion_item)
 end
 
