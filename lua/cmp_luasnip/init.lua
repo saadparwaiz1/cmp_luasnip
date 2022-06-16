@@ -72,39 +72,35 @@ function source:complete(params, callback)
 		-- Right now, we need to update the regTrig snips on every keypress
 		-- potentially, but we should avoid that if we can
 		local ft = filetypes[i]
-		-- if not snip_cache[ft] then
-		-- ft not yet in cache.
-		local ft_items = {}
-		local ft_table = require("luasnip").get_snippets(ft, { type = "snippets" })
-		if ft_table then
-			for j, snip in pairs(ft_table) do
-				if not snip.hidden then
-					local stored_snip = {
-						word = snip.trigger,
-						label = snip.trigger,
-						kind = cmp.lsp.CompletionItemKind.Snippet,
-						data = {
-							filetype = ft,
-							snip_id = snip.id,
-							show_condition = snip.show_condition,
-						},
-						isIncomplete = false,
-					}
-					if snip.regTrig then
-						local expand_params = snip:matches(params.context.cursor_before_line)
-						if expand_params then
-							stored_snip.word = expand_params.trigger
-							stored_snip.label = expand_params.trigger
-						else
+		if not snip_cache[ft] then
+			-- ft not yet in cache.
+			local ft_items = {}
+			local ft_table = require("luasnip").get_snippets(ft, { type = "snippets" })
+			if ft_table then
+				for j, snip in pairs(ft_table) do
+					if not snip.hidden then
+						local stored_snip = {
+							word = snip.trigger,
+							label = snip.trigger,
+							kind = cmp.lsp.CompletionItemKind.Snippet,
+							data = {
+								filetype = ft,
+								snip_id = snip.id,
+								show_condition = snip.show_condition,
+								regTrig = snip.regTrig,
+							},
+							isIncomplete = false,
+						}
+						if snip.regTrig then
 							stored_snip.isIncomplete = true
 						end
+						table.insert(ft_items, stored_snip)
 					end
-					table.insert(ft_items, stored_snip)
 				end
+				snip_cache[ft] = ft_items
 			end
-			snip_cache[ft] = ft_items
 		end
-		-- end
+		--
 		vim.list_extend(items, snip_cache[ft])
 	end
 
@@ -115,6 +111,25 @@ function source:complete(params, callback)
 			return not i.data.show_condition or i.data.show_condition(line_to_cursor)
 		end, items)
 	end
+
+	for _, snip in ipairs(items) do
+		if snip.data.regTrig then
+			local expand_params = require("luasnip").get_id_snippet(snip.data.snip_id):matches(
+				params.context.cursor_before_line
+			)
+			if expand_params then
+				snip.word = expand_params.trigger
+				snip.label = expand_params.trigger
+				snip.isIncomplete = false
+			else
+				snip.isIncomplete = true
+			end
+		end
+	end
+
+	items = vim.tbl_filter(function(i)
+		return not i.isIncomplete
+	end, items)
 
 	callback(items)
 end
