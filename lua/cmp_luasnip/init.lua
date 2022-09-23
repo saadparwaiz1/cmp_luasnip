@@ -75,7 +75,7 @@ function source:complete(params, callback)
 				type = "snippets"
 			})
 			if ft_table then
-				for j, snip in pairs(ft_table) do
+				for _, snip in pairs(ft_table) do
 					if not snip.hidden then
 						ft_items[#ft_items + 1] = {
 							word = snip.trigger,
