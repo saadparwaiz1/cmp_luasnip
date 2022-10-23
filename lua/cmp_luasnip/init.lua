@@ -75,12 +75,12 @@ function source:complete(params, callback)
 		local ft = filetypes[i]
 		if not snip_cache[ft] then
 			-- ft not yet in cache.
-			local ft_items = {}
-			local ft_table = require("luasnip").get_snippets(ft, {
-				type = "snippets"
-			})
-			if ft_table then
-				for j, snip in pairs(ft_table) do
+			local ft_items   = {}
+			local ft_table   = require("luasnip").get_snippets(ft, {type = "snippets"})
+			local auto_table = require('luasnip').get_snippets(ft, {type="autosnippets"})
+			for _,ele in ipairs{{ft_table, false}, {auto_table, true}} do
+				local tab,auto = table.unpack(ele)
+				for j, snip in pairs(tab) do
 					if not snip.hidden then
 						ft_items[#ft_items + 1] = {
 							word = snip.trigger,
@@ -90,26 +90,8 @@ function source:complete(params, callback)
 								filetype = ft,
 								snip_id = snip.id,
 								show_condition = snip.show_condition,
-								auto = false
+								auto = auto
 							},
-						}
-					end
-				end
-			end
-			local auto_table = require('luasnip').get_snippets(ft, {type="autosnippets"})
-			if auto_table then
-				for j, snip in pairs(auto_table) do
-					if not snip.hidden then
-						ft_items[#ft_items+1] = {
-							word = snip.trigger,
-							label = snip.trigger,
-							kind = cmp.lsp.CompletionItemKind.Snippet,
-							data = {
-								filetype = ft,
-								snip_id = snip.id,
-								show_condition = snip.show_condition,
-								auto = true
-							}
 						}
 					end
 				end
