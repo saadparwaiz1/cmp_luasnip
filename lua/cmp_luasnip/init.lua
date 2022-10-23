@@ -90,30 +90,30 @@ function source:complete(params, callback)
 								filetype = ft,
 								snip_id = snip.id,
 								show_condition = snip.show_condition,
-                auto = false
+								auto = false
 							},
 						}
 					end
 				end
 			end
-      local auto_table = require('luasnip').get_snippets(ft, {type="autosnippets"})
-      if auto_table then
-        for j, snip in pairs(auto_table) do
-          if not snip.hidden then
-            ft_items[#ft_items+1] = {
-              word = snip.trigger,
-              label = snip.trigger,
-              kind = cmp.lsp.CompletionItemKind.Snippet,
-              data = {
-                filetype = ft,
-                snip_id = snip.id,
-                show_condition = snip.show_condition,
-                auto = true
-              }
-            }
-          end
-        end
-      end
+			local auto_table = require('luasnip').get_snippets(ft, {type="autosnippets"})
+			if auto_table then
+				for j, snip in pairs(auto_table) do
+					if not snip.hidden then
+						ft_items[#ft_items+1] = {
+							word = snip.trigger,
+							label = snip.trigger,
+							kind = cmp.lsp.CompletionItemKind.Snippet,
+							data = {
+								filetype = ft,
+								snip_id = snip.id,
+								show_condition = snip.show_condition,
+								auto = true
+							}
+						}
+					end
+				end
+			end
 			snip_cache[ft] = ft_items
 		end
 		vim.list_extend(items, snip_cache[ft])
