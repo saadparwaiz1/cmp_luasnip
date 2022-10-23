@@ -79,7 +79,7 @@ function source:complete(params, callback)
 			local ft_table   = require("luasnip").get_snippets(ft, {type = "snippets"})
 			local auto_table = require('luasnip').get_snippets(ft, {type="autosnippets"})
 			for _,ele in ipairs{{ft_table, false}, {auto_table, true}} do
-				local tab,auto = table.unpack(ele)
+				local tab,auto = unpack(ele)
 				for j, snip in pairs(tab) do
 					if not snip.hidden then
 						ft_items[#ft_items + 1] = {
