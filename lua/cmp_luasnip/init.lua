@@ -106,7 +106,7 @@ function source:complete(params, callback)
               kind = cmp.lsp.CompletionItemKind.Snippet,
               data = {
                 filetype = ft,
-                ft_indx = j,
+                snip_id = snip.id,
                 show_condition = snip.show_condition,
                 auto = true
               }
