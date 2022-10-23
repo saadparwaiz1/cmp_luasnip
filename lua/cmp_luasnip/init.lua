@@ -96,7 +96,7 @@ function source:complete(params, callback)
 					end
 				end
 			end
-      local auto_table = require('luasnip').autosnippets[ft]
+      local auto_table = require('luasnip').get_snippets(ft, {type="autosnippets"})
       if auto_table then
         for j, snip in pairs(auto_table) do
           if not snip.hidden then
