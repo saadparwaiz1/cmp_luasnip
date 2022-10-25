@@ -38,13 +38,7 @@ local function get_documentation(snip, data)
 	documentation = table.concat(documentation, "\n")
 
 	doc_cache[data.filetype] = doc_cache[data.filetype] or {}
-	doc_cache[data.filetype].auto = doc_cache[data.filetype].auto or {}
-	doc_cache[data.filetype].snip = doc_cache[data.filetype].snip or {}
-	if data.auto then
-		doc_cache[data.filetype]['auto'][data.snip_id] = documentation
-	else
-		doc_cache[data.filetype]['snip'][data.snip_id] = documentation
-	end
+	doc_cache[data.filetype][data.snip_id] = documentation
 	return documentation
 end
 
@@ -116,8 +110,6 @@ function source:resolve(completion_item, callback)
 	local item_snip_id = completion_item.data.snip_id
 	local snip = require("luasnip").get_id_snippet(item_snip_id)
 	local doc_itm = doc_cache[completion_item.data.filetype] or {}
-	doc_itm = completion_item.data.auto and doc_itm.auto or doc_itm.snip
-	doc_itm = doc_itm or {}
 	doc_itm = doc_itm[completion_item.data.snip_id] or get_documentation(snip, completion_item.data)
 	completion_item.documentation = {
 		kind = cmp.lsp.MarkupKind.Markdown,
