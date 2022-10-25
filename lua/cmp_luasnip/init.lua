@@ -5,6 +5,7 @@ local source = {}
 
 local defaults = {
 	use_show_condition = true,
+	show_autosnippets  = false,
 }
 
 -- the options are being passed via cmp.setup.sources, e.g.
@@ -13,6 +14,7 @@ local function init_options(params)
 	params.option = vim.tbl_deep_extend('keep', params.option, defaults)
 	vim.validate({
 		use_show_condition = { params.option.use_show_condition, 'boolean' },
+		show_autosnippets  = { params.option.show_autosnippets,  'boolean' },
 	})
 end
 
@@ -72,7 +74,13 @@ function source:complete(params, callback)
 			local ft_items   = {}
 			local ft_table   = require("luasnip").get_snippets(ft, {type = "snippets"})
 			local auto_table = require('luasnip').get_snippets(ft, {type="autosnippets"})
-			for _,ele in ipairs{{ft_table, false}, {auto_table, true}} do
+			local iter_tab
+			if params.option.show_autosnippets then
+				iter_tab = {{ft_table, false}, {auto_table, true}}
+			else
+				iter_tab = {{ft_table, false}}
+			end
+			for _,ele in ipairs(iter_tab) do
 				local tab,auto = unpack(ele)
 				for j, snip in pairs(tab) do
 					if not snip.hidden then
