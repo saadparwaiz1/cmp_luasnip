@@ -71,11 +71,11 @@ function source:complete(params, callback)
 		local ft = filetypes[i]
 		if not snip_cache[ft] then
 			-- ft not yet in cache.
-			local ft_items   = {}
-			local ft_table   = require("luasnip").get_snippets(ft, {type = "snippets"})
-			local auto_table = require('luasnip').get_snippets(ft, {type="autosnippets"})
+			local ft_items = {}
+			local ft_table = require("luasnip").get_snippets(ft, {type = "snippets"})
 			local iter_tab
 			if params.option.show_autosnippets then
+				local auto_table = require('luasnip').get_snippets(ft, {type="autosnippets"})
 				iter_tab = {{ft_table, false}, {auto_table, true}}
 			else
 				iter_tab = {{ft_table, false}}
