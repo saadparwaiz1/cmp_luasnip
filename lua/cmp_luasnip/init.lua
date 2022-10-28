@@ -5,6 +5,7 @@ local source = {}
 
 local defaults = {
 	use_show_condition = true,
+	show_autosnippets  = false,
 }
 
 -- the options are being passed via cmp.setup.sources, e.g.
@@ -13,6 +14,7 @@ local function init_options(params)
 	params.option = vim.tbl_deep_extend('keep', params.option, defaults)
 	vim.validate({
 		use_show_condition = { params.option.use_show_condition, 'boolean' },
+		show_autosnippets  = { params.option.show_autosnippets,  'boolean' },
 	})
 end
 
@@ -39,7 +41,6 @@ local function get_documentation(snip, data)
 
 	doc_cache[data.filetype] = doc_cache[data.filetype] or {}
 	doc_cache[data.filetype][data.snip_id] = documentation
-
 	return documentation
 end
 
@@ -71,11 +72,17 @@ function source:complete(params, callback)
 		if not snip_cache[ft] then
 			-- ft not yet in cache.
 			local ft_items = {}
-			local ft_table = require("luasnip").get_snippets(ft, {
-				type = "snippets"
-			})
-			if ft_table then
-				for j, snip in pairs(ft_table) do
+			local ft_table = require("luasnip").get_snippets(ft, {type = "snippets"})
+			local iter_tab
+			if params.option.show_autosnippets then
+				local auto_table = require('luasnip').get_snippets(ft, {type="autosnippets"})
+				iter_tab = {{ft_table, false}, {auto_table, true}}
+			else
+				iter_tab = {{ft_table, false}}
+			end
+			for _,ele in ipairs(iter_tab) do
+				local tab,auto = unpack(ele)
+				for j, snip in pairs(tab) do
 					if not snip.hidden then
 						ft_items[#ft_items + 1] = {
 							word = snip.trigger,
@@ -85,6 +92,7 @@ function source:complete(params, callback)
 								filetype = ft,
 								snip_id = snip.id,
 								show_condition = snip.show_condition,
+								auto = auto
 							},
 						}
 					end
@@ -109,18 +117,11 @@ end
 function source:resolve(completion_item, callback)
 	local item_snip_id = completion_item.data.snip_id
 	local snip = require("luasnip").get_id_snippet(item_snip_id)
-	local documentation
-	if
-		doc_cache[completion_item.data.filetype]
-		and doc_cache[completion_item.data.filetype][item_snip_id]
-	then
-		documentation = doc_cache[completion_item.data.filetype][item_snip_id]
-	else
-		documentation = get_documentation(snip, completion_item.data)
-	end
+	local doc_itm = doc_cache[completion_item.data.filetype] or {}
+	doc_itm = doc_itm[completion_item.data.snip_id] or get_documentation(snip, completion_item.data)
 	completion_item.documentation = {
 		kind = cmp.lsp.MarkupKind.Markdown,
-		value = documentation,
+		value = doc_itm,
 	}
 	callback(completion_item)
 end

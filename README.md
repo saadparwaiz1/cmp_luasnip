@@ -38,3 +38,18 @@ sources = {
 This can also be configured on per-buffer basis as described in cmp's README
 [here](https://github.com/hrsh7th/nvim-cmp#how-to-disable-nvim-cmp-on-the-specific-buffer)
 and [here](https://github.com/hrsh7th/nvim-cmp#sources-type-tablecmpsourceconfig).
+
+The same way you can de-/activate whether autosnippets should be included in the
+completion list or not (including them can be a bit problematic since when you
+select the entry, the text gets inserted and the snippet automatically
+triggers). This option defaults to `false` to be backwards compatible. Example:
+
+```lua
+sources = {
+  { name = 'luasnip', option = { show_autosnippets = true } },
+  -- more sources
+},
+```
+
+Hint: If you want to just hide some autosnippets consider the `hidden` option of
+luaSnip
