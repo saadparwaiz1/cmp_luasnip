@@ -137,19 +137,40 @@ function source:execute(completion_item, callback)
 	local cursor = vim.api.nvim_win_get_cursor(0)
 	-- get_cursor returns (1,0)-indexed position, clear_region expects (0,0)-indexed.
 	cursor[1] = cursor[1] - 1
+	local line = require("luasnip.util.util").get_current_line_to_cursor()
+
+	local expand_params = snip:matches(line)
+
+	local clear_region = {
+		from = {
+			cursor[1],
+			cursor[2] - #completion_item.word
+		},
+		to = cursor
+	}
+	if expand_params ~= nil then
+		if expand_params.clear_region ~= nil then
+			clear_region = expand_params.clear_region
+		else
+			if expand_params.trigger ~= nil then
+				clear_region = {
+					from = {
+						cursor[1],
+						cursor[2] - #expand_params.trigger,
+					},
+					to = cursor,
+				}
+			end
+		end
+	end
 
 	-- text cannot be cleared before, as TM_CURRENT_LINE and
 	-- TM_CURRENT_WORD couldn't be set correctly.
 	require("luasnip").snip_expand(snip, {
 		-- clear word inserted into buffer by cmp.
 		-- cursor is currently behind word.
-		clear_region = {
-			from = {
-				cursor[1],
-				cursor[2]-#completion_item.word
-			},
-			to = cursor
-		}
+		clear_region = clear_region,
+		expand_params = expand_params,
 	})
 	callback(completion_item)
 end
