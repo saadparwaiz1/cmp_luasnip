@@ -89,6 +89,7 @@ function source:complete(params, callback)
 							label = snip.trigger,
 							kind = cmp.lsp.CompletionItemKind.Snippet,
 							data = {
+								priority = snip.effective_priority or 1000, -- Default priority is used for old luasnip versions
 								filetype = ft,
 								snip_id = snip.id,
 								show_condition = snip.show_condition,
@@ -98,6 +99,9 @@ function source:complete(params, callback)
 					end
 				end
 			end
+			table.sort(ft_items, function(a, b)
+				return a.data.priority > b.data.priority
+			end)
 			snip_cache[ft] = ft_items
 		end
 		vim.list_extend(items, snip_cache[ft])
